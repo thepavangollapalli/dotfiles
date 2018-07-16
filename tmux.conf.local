@@ -1,0 +1,138 @@
+# remap prefix to Control + a
+set -g prefix C-a
+# bind 'C-a C-a' to type 'C-a'
+bind C-a send-prefix
+unbind C-b
+
+# split panes using | and -
+bind \ split-window -h
+bind - split-window -v
+unbind '"'
+unbind %
+
+is_vim='echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(view|n?vim?)(diff)?$"'
+
+bind-key -n C-h if-shell "$is_vim" "send-keys C-h"  "select-pane -L"
+bind-key -n C-j if-shell "$is_vim" "send-keys C-j"  "select-pane -D"
+bind-key -n C-k if-shell "$is_vim" "send-keys C-k"  "select-pane -U"
+bind-key -n C-l if-shell "$is_vim" "send-keys C-l"  "select-pane -R"
+bind-key -n C-\ if-shell "$is_vim" "send-keys C-\\" "select-pane -l"
+
+# switch panes using Alt-arrow without prefix
+bind -n M-Left select-pane -L
+bind -n M-Right select-pane -R
+bind -n M-Up select-pane -U
+bind -n M-Down select-pane -D
+
+# resize panes
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+
+bind -n S-Left resize-pane -L 2
+bind -n S-Right resize-pane -R 2
+bind -n S-Down resize-pane -D 1
+bind -n S-Up resize-pane -U 1
+
+bind -n C-Left resize-pane -L 10
+bind -n C-Right resize-pane -R 10
+bind -n C-Down resize-pane -D 5
+bind -n C-Up resize-pane -U 5
+
+# force a reload of the config file
+unbind r
+bind r source-file ~/.tmux.conf \; display "Reloaded!"
+
+###############################################################################
+############# Date/Time values that can be displayed in the status line
+###############################################################################
+
+# $(echo $USER) - shows the current username
+# %a --> Day of week (Mon)
+# %A --> Day of week Expanded (Monday)
+
+# %b --> Month (Jan)
+# %d --> Day (31)
+# %Y --> Year (2017)
+
+# %D --> Month/Day/Year (12/31/2017)
+# %v --> Day-Month-Year (31-Dec-2017)
+
+# %r --> Hour:Min:Sec AM/PM (12:30:27 PM)
+# %T --> 24 Hour:Min:Sec (16:30:27)
+# %X --> Hour:Min:Sec (12:30:27)
+# %R --> 24 Hour:Min (16:30)
+# %H --> 24 Hour (16)
+# %l --> Hour (12)
+# %M --> Mins (30)
+# %S --> Seconds (09)
+# %p --> AM/PM (AM)
+
+# For a more complete list view: https://linux.die.net/man/3/strftime
+
+###############################################################################
+############# Settings
+###############################################################################
+
+# Refresh status line every 5 seconds
+set -g status-interval 5
+
+# Start window and pane indices at 1.
+set -g base-index 1
+set -g pane-base-index 1
+
+# length of tmux status line
+set -g status-left-length 30
+set -g status-right-length 150
+
+# Make active pane border blue
+set -g pane-active-border-fg colour1
+
+#Set the left and right status
+set -g status-left '#[bg=colour7]#[fg=colour0]#{?client_prefix,#[bg=colour2],} ❐ #S #[bg=colour8]#[fg=colour7]#{?client_prefix,#[fg=colour2],}#{?window_zoomed_flag, 🔍 ,}#[fg=colour1]  ♥ #(~/.dotfiles/tmux_scripts/battery.sh)  '
+set -g status-right '#[fg=colour2]#(~/.dotfiles/tmux_scripts/uptime.sh) #[fg=colour1]⮃ #[fg=colour4]#[bg=colour4]#[fg=colour0] #(~/.dotfiles/tmux_scripts/music.sh) #[bg=colour4]#[fg=colour7]#[bg=colour7]#[fg=colour0] %b %d %H:%M '
+
+# Set the background color
+set -g status-bg colour8
+
+#colour0 (black)
+#colour1 (red)
+#colour2 (green)
+#colour3 (yellow)
+#colour4 (blue)
+#colour7 (white)
+#colour5 colour6 colour7 colour8 colour9 colour10 colour11 colour12 colour13 colour14 colour15 colour16 colour17
+
+#D ()
+#F ()
+#H (hostname)
+#I (window index)
+#P()
+#S (session index)
+#T (pane title)
+#W (currnet task like vim if editing a file in vim or zsh if running zsh)
+
+# customize how windows are displayed in the status line
+set -g window-status-current-format "#[fg=colour8]#[bg=colour4]#[fg=colour7]#[bg=colour4] #I* #[fg=colour7] #W #[fg=colour4]#[bg=colour8]"
+set -g window-status-format "#[fg=colour244]#[bg=colour8]#I-#[fg=colour240]  #W"
+
+# Set the history limit so we get lots of scrollback.
+#setw -g history-limit 50000
+
+# magic incantation from https://github.com/tmux/tmux/issues/543#issuecomment-248980734
+# to hopefully make copy & paste work
+set -g default-shell $SHELL
+set -g default-command "reattach-to-user-namespace -l ${SHELL}"
+
+bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel 'pbcopy -in -selection clipboard'
+
+set -g mouse on
+
+bind -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
+bind -n WheelDownPane select-pane -t= \; send-keys -M
+bind -n C-WheelUpPane select-pane -t= \; copy-mode -e \; send-keys -M
+bind -T copy-mode-vi    C-WheelUpPane   send-keys -X halfpage-up
+bind -T copy-mode-vi    C-WheelDownPane send-keys -X halfpage-down
+bind -T copy-mode-emacs C-WheelUpPane   send-keys -X halfpage-up
+bind -T copy-mode-emacs C-WheelDownPane send-keys -X halfpage-down

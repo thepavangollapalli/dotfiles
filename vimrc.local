@@ -1,0 +1,260 @@
+imap kj <Esc>
+
+" visuals
+syntax enable
+syntax on
+
+let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+
+" Theme and Styling
+set t_Co=256
+set background=dark
+
+autocmd ColorScheme * highlight! Normal ctermbg=NONE guibg=NONE
+
+if (has("termguicolors"))
+  set termguicolors
+endif
+
+let g:enable_bold_font = 0
+let g:enable_italic_font = 1
+
+let g:solarized_use16 = 1
+set background=dark
+colorscheme solarized8
+
+" utf8 stuff
+set fileencodings+=utf-8
+set encoding=utf-8
+
+set mouse=a
+
+highlight Normal ctermbg=NONE
+highlight nonText ctermbg=NONE
+
+" " highlight groups
+" highlight Comment cterm=none ctermbg=black ctermfg=242
+" highlight Constant cterm=none ctermbg=black ctermfg=cyan
+"
+" tabbar colors
+hi TabLineFill cterm=none ctermfg=darkgray  ctermbg=black
+hi TabLine     cterm=none ctermfg=darkgray ctermbg=black
+hi TabLineSel  cterm=none ctermfg=green ctermbg=black
+
+" homebrew
+" hi TabLineFill cterm=none ctermfg=black  ctermbg=green
+" hi TabLine     cterm=none ctermfg=black ctermbg=green
+" hi TabLineSel  cterm=none ctermfg=green ctermbg=black
+
+" gutter colors
+hi SignColumn cterm=none ctermfg=lightgrey ctermbg=black
+hi LineNr cterm=none ctermfg=lightgrey ctermbg=black
+hi CursorLineNr cterm=none ctermfg=yellow ctermbg=black
+hi FoldColumn cterm=none ctermfg=darkgrey ctermbg=black
+
+" status line
+" hi StatusLine ctermbg=black ctermfg=green
+" hi StatusLineNC ctermbg=green ctermfg=black
+"
+" " search
+hi Search cterm=NONE ctermfg=black ctermbg=yellow
+
+"set relativenumber
+set number
+set linespace=10
+set numberwidth=5
+set wrap
+set showmatch
+set gdefault " assume the /g flag on all :s substitutions to replace all matches in a line
+set autoindent
+set backspace=indent,eol,start " allow backspacing over everything in insert mode
+set backupdir=~/.tmp
+set directory=~/.tmp " Don't clutter my dirs up with swp and tmp files
+set ignorecase smartcase
+set laststatus=2  " Always show status line.
+set gdefault " assume the /g flag on :s substitutions to replace all matches in a line
+set autoindent " always set autoindenting on
+set lazyredraw " Don't redraw screen when running macros.
+
+" Make it obvious where 80 characters is
+set textwidth=80
+set colorcolumn=+1
+
+autocmd FileType slim setlocal textwidth=10000
+
+" stripe trailing whitespace on save
+autocmd BufWritePre * %s/\s\+$//e
+
+" pmenu colors
+highlight Pmenu ctermfg=gray ctermbg=280
+highlight PmenuSel ctermfg=black ctermbg=blue
+
+let mapleader = ","
+
+"ale linting
+highlight ALEWarning ctermbg=235
+nmap <leader>d :ALEDisable<cr>
+let g:ale_lint_on_enter = 0
+let g:ale_lint_on_text_changed = 'never'
+
+" searching
+set hlsearch
+set noincsearch
+nmap <leader>, :nohlsearch<cr>
+
+" greplace
+set grepprg=ag
+let g:grep_cmd_opts = '--line-numbers --noheading'
+
+" rubocop
+let g:vimrubocop_config = '$HOME/.rubocop.yml'
+let g:vimrubocop_keymap = 0
+nmap <Leader>r :RuboCop<CR>
+
+" git
+nmap <Leader>gi :!git init<cr>
+nmap <Leader>ga :!git add -A<cr><cr>
+nmap <Leader>gc :!git ci<cr>
+nmap <Leader>gco :!git checkout<space>
+nmap <Leader>gcb :!git checkout -b<space>
+nmap <Leader>gs :!git status<cr>
+nmap <Leader>gl :!git log<cr>
+nmap <Leader>gm :!git merge<space>
+nmap <Leader>gp :!git publish<cr>
+nmap <Leader>gu :!git update<cr>
+nmap <Leader>gpa :!git push --all<cr>
+nmap <Leader>grb :!git rebase<space>
+nmap <Leader>grh :!git reset HEAD<space>
+nmap <Leader>gpp :!git pull --rebase && git push<cr>
+
+" rails
+nmap <leader>bi :!bundle install<cr>
+nmap <leader>rr :!bundle exec rake<space>
+nmap <leader>rm :!bundle exec rake db:migrate<cr>
+nmap <leader>rgd :!rails g migration<space>
+nmap <leader>rgm :!rails g model<space>
+
+
+" ack / grep
+" nmap <M-k>    :Ack! "\b<cword>\b" <CR>
+" nmap <Esc>k   :Ack! "\b<cword>\b" <CR>
+" nmap <M-S-k>  :Ggrep! "\b<cword>\b" <CR>
+" nmap <Esc>K   :Ggrep! "\b<cword>\b" <CR>
+
+" execute line
+map <Leader>x :exec getline(".")<cr>
+" Ctags
+nmap <leader>f :tag<space>
+
+" Exclude Javascript files in :Rtags via rails.vim due to warnings when parsing
+let g:Tlist_Ctags_Cmd="ctags --exclude='*.js'"
+
+" Index ctags from any project, including those outside Rails
+map <Leader>ct :!ctags --exclude=node_modules --exclude=.DS_Store --exclude=git --exclude=bootstrap/cached/compiled --exclude=vendor -R .<CR>
+
+" vimrc file
+
+" open vimrc file to edit
+nmap <leader>ev :tabedit ~/.vimrc.local <cr>
+
+"Automatically source the Vimrc file on save.
+" augroup autosourcing
+"  autocmd!
+"  autocmd BufWritePost .vimrc.local source %
+
+"automatically reblance windows on vim resize
+autocmd VimREsized * :wincmd =
+
+"zoom a vim pane, <C-w>= to re-balance
+noremap <leader>- :wincmd _<cr>:wincmd \|<cr>
+noremap <leader>= :wincmd =<cr>
+
+"tmux runner
+let g:VtrUseVtrMaps = 1
+let g:VtrGitCdUpOnOpen = 0
+let g:VtrPercentage = 30
+
+nmap <leader>fs :VtrFlushCommand<cr>:VtrSendCommandToRunner<cr>
+nmap <C-f> :VtrSendLinesToRunner<cr>
+vmap <C-f> :VtrSendLinesToRunner<cr>
+
+nmap <leader>osr :VtrOpenRunner { 'orientation': 'h', 'percentage': 50 }<cr>
+nmap <leader>opr :VtrOpenRunner { 'orientation': 'h', 'percentage': 50, 'cmd': 'pry' }<cr>
+nnoremap <leader>irb :VtrOpenRunner {'orientation': 'h', 'percentage': 50, 'cmd': 'irb'}<cr>
+nnoremap <leader>rc :VtrOpenRunner {'orientation': 'h', 'percentage': 50, 'cmd': 'rails c'}<cr>
+
+" rspec
+"let g:rspec_command = "!clear && bundle exec spring rspec {spec}"
+"let g:rspec_command = "Dispatch bundle exec rspec {spec}"
+let g:rspec_command = "VtrSendCommandToRunner! bundle exec spring rspec {spec}"
+
+" rspec.vim mappings
+map <Leader>tt :call RunCurrentSpecFile()<CR>
+map <Leader>ts :call RunNearestSpec()<CR>
+map <Leader>tl :call RunLastSpec()<CR>
+map <Leader>ta :call RunAllSpecs()<CR>
+
+" vim command runner
+nnoremap <leader>sd :VtrSendCtrlD<cr>
+nnoremap <leader>sq :VtrSendCommandToRunner q<cr>
+nnoremap <leader>sl :VtrSendCommandToRunner FF<cr>
+
+"Fix tabs
+set tabstop=2 softtabstop=0 expandtab shiftwidth=2 smarttab
+nmap <Leader>ft :set tabstop=2 shiftwidth=2 expandtab<cr>:retab<cr>
+
+" Set system clipboard
+set clipboard=unnamed
+
+" Paste from the system clipboard
+map <Leader>pp :set paste<CR>o<esc>"*]p:set nopaste<cr>
+
+" Make it more obvious which paren I'm on
+hi MatchParen cterm=none ctermbg=black ctermfg=yellow
+
+" By default, vim thinks .md is Modula-2.
+autocmd BufNewFile,BufReadPost *.md set filetype=markdown
+
+" Without this, vim breaks in the middle of words when wrapping
+autocmd FileType markdown setlocal nolist wrap lbr
+
+" Wrap the quickfix window
+autocmd FileType qf setlocal wrap linebreak
+b
+" Don't automatically continue comments after newline
+autocmd BufNewFile,BufRead * setlocal formatoptions-=cro
+
+" Make it more obviouser when lines are too long
+highlight ColorColumn ctermbg=235
+
+" Adjust quick fix window height
+au FileType qf call AdjustWindowHeight(10, 20)
+function! AdjustWindowHeight(minheight, maxheight)
+    let l = 1
+    let n_lines = 0
+    let w_width = winwidth(0)
+    while l <= line('$')
+        " number to float for division
+        let l_len = strlen(getline(l)) + 0.0
+        let line_width = l_len/w_width
+        let n_lines += float2nr(ceil(line_width))
+        let l += 1
+    endw
+    exe max([min([n_lines, a:maxheight]), a:minheight]) . "wincmd _"
+endfunction
+
+" disable VI mode
+set nocompatible
+
+map <Leader>n :NERDTreeToggle<CR>
+map <Leader>i :IndentGuidesToggle<CR>
+
+" FZF - Fuzzy matcher
+nmap <Leader>b :Buffers<CR>
+nmap <Leader>f :Files<CR>
+nmap <Leader>t :Tags<CR>
+
+
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
