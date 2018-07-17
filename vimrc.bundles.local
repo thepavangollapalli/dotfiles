@@ -17,6 +17,5 @@ Plug 'junegunn/fzf.vim'
 Plug 'thoughtbot/vim-rspec'
 Plug 'yssl/QFEnter'
 Plug 'lifepillar/vim-solarized8'
-Plug 'vim-scripts/vim-auto-save'
 
 call plug#end()
