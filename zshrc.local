@@ -1,1 +1,2 @@
-source ~/.zsh/themes/agnoster.zsh-theme
+autoload -U promptinit; promptinit
+prompt pure

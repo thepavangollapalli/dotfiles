@@ -15,7 +15,6 @@ Plug 'nathanaelkane/vim-indent-guides'
 Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
 Plug 'thoughtbot/vim-rspec'
-Plug 'yssl/QFEnter'
 Plug 'lifepillar/vim-solarized8'
 
 call plug#end()
