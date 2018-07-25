@@ -2,4 +2,4 @@ autoload -U promptinit; promptinit
 prompt pure
 
 # needs to be the last line
-source zsh_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source ~/dotfiles-local/zsh_plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
