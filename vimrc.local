@@ -20,9 +20,8 @@ endif
 let g:enable_bold_font = 0
 let g:enable_italic_font = 1
 
-let g:solarized_use16 = 1
 set background=dark
-colorscheme solarized8
+colorscheme seoul256
 
 " utf8 stuff
 set fileencodings+=utf-8
