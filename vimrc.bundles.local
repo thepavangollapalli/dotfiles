@@ -16,5 +16,6 @@ Plug '/usr/local/opt/fzf'
 Plug 'junegunn/fzf.vim'
 Plug 'thoughtbot/vim-rspec'
 Plug 'rafi/awesome-vim-colorschemes'
+Plug 'scrooloose/nerdcommenter'
 
 call plug#end()
