@@ -63,7 +63,8 @@ hi Search cterm=NONE ctermfg=black ctermbg=yellow
 set number
 set linespace=10
 set numberwidth=5
-set wrap
+set linebreak
+set nolist " list disables linebreak
 set showmatch
 set gdefault " assume the /g flag on all :s substitutions to replace all matches in a line
 set autoindent
