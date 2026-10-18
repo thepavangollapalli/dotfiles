@@ -30,8 +30,10 @@ export ZSH="$HOME/.oh-my-zsh"
 DOTFILES_DIR="${${(%):-%x}:A:h:h}"
 export ZSH_CUSTOM="$DOTFILES_DIR/zsh/custom"
 
-export ZSH_COMPDUMP="$HOME/.cache/zsh/zcompdump"
-mkdir -p "$HOME/.cache/zsh"
+# Keep the dump per zsh version: /bin/zsh and Homebrew zsh differ, and a .zwc
+# compiled by one is rejected by the other ("wrong version" on startup).
+export ZSH_COMPDUMP="$HOME/.cache/zsh/zcompdump-${ZSH_VERSION}"
+mkdir -p "${ZSH_COMPDUMP:h}"
 
 ZSH_THEME="agnoster"
 DEFAULT_USER="$USER"
