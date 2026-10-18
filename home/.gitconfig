@@ -1,0 +1,43 @@
+[user]
+	name = Pavan Gollapalli
+	email = pavankgollapalli@gmail.com
+[init]
+	defaultBranch = main
+[core]
+	editor = vim
+	excludesFile = ~/.gitignore
+	autocrlf = input
+	pager = less -FRX
+[color]
+	ui = auto
+[push]
+	default = current
+	autoSetupRemote = true
+[fetch]
+	prune = true
+[pull]
+	rebase = true
+[rebase]
+	autosquash = true
+[merge]
+	conflictStyle = zdiff3
+[diff]
+	colorMoved = zebra
+	algorithm = histogram
+[rerere]
+	enabled = true
+[credential]
+	helper = osxkeychain
+[include]
+	path = ~/.gitconfig.local
+[alias]
+	st = status -sb
+	co = checkout
+	br = branch
+	ci = commit -v
+	ca = commit --amend
+	cm = commit -m
+	unstage = reset HEAD --
+	last = log -1 HEAD --stat
+	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+	pf = push --force-with-lease
