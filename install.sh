@@ -29,6 +29,17 @@ if [[ ! -d "$SRC_DIR" ]]; then
   exit 1
 fi
 
+# oh-my-zsh is an external framework; only the configuration lives in this repo.
+OMZ_DIR="$HOME/.oh-my-zsh"
+if [[ ! -f "$OMZ_DIR/oh-my-zsh.sh" ]]; then
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "would clone oh-my-zsh into $OMZ_DIR"
+  else
+    echo "cloning oh-my-zsh into $OMZ_DIR"
+    git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$OMZ_DIR"
+  fi
+fi
+
 linked=0
 while IFS= read -r src; do
   rel="${src#"$SRC_DIR"/}"

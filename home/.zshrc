@@ -16,18 +16,34 @@ export LESS='-FRX'
 export CLICOLOR=1
 
 # History --------------------------------------------------------------------
+# Set here, not in .zshenv: macOS /etc/zshrc overwrites HISTFILE with
+# ~/.zsh_history before ~/.zshrc runs.
 HISTFILE="$HOME/.zhistory"
 HISTSIZE=50000
 SAVEHIST=50000
+
+# oh-my-zsh ------------------------------------------------------------------
+export ZSH="$HOME/.oh-my-zsh"
+
+# This file is symlinked from <repo>/home/.zshrc. Resolve that symlink back to
+# the repo root so custom OMZ themes/plugins are stored in the repo itself.
+DOTFILES_DIR="${${(%):-%x}:A:h:h}"
+export ZSH_CUSTOM="$DOTFILES_DIR/zsh/custom"
+
+export ZSH_COMPDUMP="$HOME/.cache/zsh/zcompdump"
+mkdir -p "$HOME/.cache/zsh"
+
+ZSH_THEME="agnoster"
+DEFAULT_USER="$USER"
+plugins=(git brew macos extract sudo colored-man-pages z)
+source "$ZSH/oh-my-zsh.sh"
+
+# History --------------------------------------------------------------------
 setopt hist_ignore_space hist_ignore_all_dups hist_reduce_blanks
 setopt inc_append_history share_history
 setopt autocd extendedglob interactive_comments no_flow_control
 
-# Completion -----------------------------------------------------------------
-mkdir -p "$HOME/.cache/zsh"
-autoload -Uz compinit
-compinit -d "$HOME/.cache/zsh/zcompdump"
-
+# Completion styling ---------------------------------------------------------
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
@@ -41,15 +57,6 @@ bindkey '^R' history-incremental-search-backward
 bindkey '^?' backward-delete-char
 bindkey '^H' backward-delete-char
 
-# Prompt ---------------------------------------------------------------------
-autoload -Uz add-zsh-hook vcs_info
-zstyle ':vcs_info:git:*' formats ' %F{green}%b%f'
-zstyle ':vcs_info:git:*' actionformats ' %F{green}%b%f%F{red}|%a%f'
-add-zsh-hook precmd vcs_info
-setopt promptsubst
-PROMPT='%F{blue}%~%f${vcs_info_msg_0_} %# '
-RPROMPT='%(?..%F{red}%?%f)'
-
 # Aliases --------------------------------------------------------------------
 alias ll='ls -alF'
 alias la='ls -A'
@@ -59,6 +66,8 @@ alias path='print -l $path'
 alias reload='exec zsh -l'
 
 # Functions ------------------------------------------------------------------
+unalias g 2>/dev/null
+
 g() {
   if (( $# )); then
     git "$@"
