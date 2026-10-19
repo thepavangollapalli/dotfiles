@@ -26,19 +26,22 @@ optional private file after the shared environment defaults. The private
 file should contain environment exports only, since login interactive shells
 load it twice. Use `$HOME` instead of hardcoded user paths.
 
-Store tokens, key paths and passphrases, authenticated Snowflake connection
-strings, and local credential profile names here. Keep reusable paths,
-aliases, tool setup, and non-secret development defaults in the repo rather
-than creating general per-computer config overrides. Prefer credential
-manager references over storing secret values when the tool supports them.
+Store credentials needed across projects, key paths and passphrases, and
+local credential profile names here. Keep reusable paths, aliases, and tool
+setup in the repo rather than creating general per-computer config overrides.
+Project commands belong in the project's Taskfile. Project environment
+defaults and credentials belong in its supported environment files or tooling,
+not global shell exports. Prefer credential manager references over storing
+secret values when the tool supports them.
 Create the private file with permissions `600`; never commit its contents or
 print secret values during setup. The installer never creates, backs up, or
 replaces this file. `credentials.zsh` is ignored as an additional safeguard.
 
-Before replacing an existing configuration, migrate its credential exports
-into this private file. On this computer that includes `CHROMATIC_PROJECT_TOKEN`,
-the `SNOWFLAKE_PRIVATE_KEY_*` and `*_SNOWFLAKE_DB_CONN_STRING` variables,
-`AWS_MFA_PROFILE`, and `ONEPASS_AWS_CRED_NAME`.
+Before replacing an existing configuration, move shared credentials into this
+private file and project settings into the corresponding project's local
+configuration. Preserve existing values without overwriting that project's
+settings. This includes reviewing database connections, API tokens, and
+private Go module settings currently exported by the old startup files.
 
 ## History and session restore
 

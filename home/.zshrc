@@ -101,16 +101,8 @@ alias v='vim'
 alias path='print -l $path'
 alias reload='exec zsh -l'
 alias hg='history | grep'
-alias dbtf='"$HOME/.local/bin/dbt"'
 
 # Functions ------------------------------------------------------------------
-unalias mfa_global 2>/dev/null
-
-mfa_global() {
-  local credential_name="${ONEPASS_AWS_CRED_NAME:-AWS (freshpaint)}"
-  bin/mfa-global.sh "$(op item get "$credential_name" --otp)" "$@"
-}
-
 unalias g 2>/dev/null
 
 g() {
