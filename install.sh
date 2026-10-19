@@ -29,44 +29,59 @@ if [[ ! -d "$SRC_DIR" ]]; then
   exit 1
 fi
 
-# oh-my-zsh is an external framework; only the configuration lives in this repo.
-OMZ_DIR="$HOME/.oh-my-zsh"
-if [[ ! -f "$OMZ_DIR/oh-my-zsh.sh" ]]; then
-  if [[ $DRY_RUN -eq 1 ]]; then
-    echo "would clone oh-my-zsh into $OMZ_DIR"
-  else
-    echo "cloning oh-my-zsh into $OMZ_DIR"
-    git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$OMZ_DIR"
+clone_dependency() {
+  local url="$1" destination="$2" installed_file="$3"
+  if [[ -f "$destination/$installed_file" ]]; then
+    return
   fi
-fi
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "would clone $url into $destination"
+  else
+    echo "cloning $url into $destination"
+    git clone --depth=1 "$url" "$destination"
+  fi
+}
+
+# Download dependencies to their standard locations; keep them out of git.
+OMZ_DIR="$HOME/.oh-my-zsh"
+clone_dependency https://github.com/ohmyzsh/ohmyzsh.git "$OMZ_DIR" oh-my-zsh.sh
+clone_dependency https://github.com/zsh-users/zsh-autosuggestions.git \
+  "$OMZ_DIR/custom/plugins/zsh-autosuggestions" zsh-autosuggestions.plugin.zsh
+clone_dependency https://github.com/zsh-users/zsh-syntax-highlighting.git \
+  "$OMZ_DIR/custom/plugins/zsh-syntax-highlighting" zsh-syntax-highlighting.plugin.zsh
+clone_dependency https://github.com/nvm-sh/nvm.git "$HOME/.nvm" nvm.sh
+clone_dependency https://github.com/tmux-plugins/tpm.git "$HOME/.tmux/plugins/tpm" tpm
+clone_dependency https://github.com/tmux-plugins/tmux-resurrect.git \
+  "$HOME/.tmux/plugins/tmux-resurrect" resurrect.tmux
 
 linked=0
-while IFS= read -r src; do
-  rel="${src#"$SRC_DIR"/}"
-  dest="$HOME/$rel"
+while IFS= read -r source_file; do
+  relative_path="${source_file#"$SRC_DIR"/}"
+  destination="$HOME/$relative_path"
 
-  if [[ -L "$dest" && "$(readlink "$dest")" == "$src" ]]; then
+  if [[ -L "$destination" && "$(readlink "$destination")" == "$source_file" ]]; then
     continue
   fi
 
   if [[ $DRY_RUN -eq 1 ]]; then
-    echo "would link ~/$rel -> $src"
+    echo "would link ~/$relative_path -> $source_file"
     linked=$((linked + 1))
     continue
   fi
 
-  mkdir -p -- "$(dirname -- "$dest")"
+  mkdir -p -- "$(dirname -- "$destination")"
 
-  if [[ -e "$dest" || -L "$dest" ]]; then
-    mkdir -p -- "$BACKUP_DIR/$(dirname -- "$rel")"
-    mv -- "$dest" "$BACKUP_DIR/$rel"
-    echo "backed up ~/$rel"
+  if [[ -e "$destination" || -L "$destination" ]]; then
+    mkdir -p -- "$BACKUP_DIR/$(dirname -- "$relative_path")"
+    mv -- "$destination" "$BACKUP_DIR/$relative_path"
+    echo "backed up ~/$relative_path"
   fi
 
-  ln -sfn -- "$src" "$dest"
-  echo "linked ~/$rel"
+  ln -sfn -- "$source_file" "$destination"
+  echo "linked ~/$relative_path"
   linked=$((linked + 1))
-done < <(find "$SRC_DIR" -type f ! -name '.DS_Store' | sort)
+done < <(find "$SRC_DIR" -type f ! -name '.DS_Store' ! -name 'credentials.zsh' | sort)
 
 if [[ $DRY_RUN -eq 0 ]]; then
   echo

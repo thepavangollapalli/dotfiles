@@ -2,12 +2,8 @@
 # ~/.zshrc — managed by ~/code/dotfiles
 # ============================================================================
 
-# Homebrew & tool paths ------------------------------------------------------
-eval "$(/opt/homebrew/bin/brew shellenv zsh)"
-
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$HOME/.local/bin:$BUN_INSTALL/bin:$HOME/.opencode/bin:$PATH"
-export PATH="/opt/homebrew/opt/postgresql@18/bin:/opt/homebrew/opt/ruby/bin:$PATH"
+# Also load the environment for interactive shells started without login.
+source "$HOME/.config/zsh/environment.zsh"
 
 export EDITOR=vim
 export VISUAL="$EDITOR"
@@ -24,11 +20,7 @@ SAVEHIST=50000
 
 # oh-my-zsh ------------------------------------------------------------------
 export ZSH="$HOME/.oh-my-zsh"
-
-# This file is symlinked from <repo>/home/.zshrc. Resolve that symlink back to
-# the repo root so custom OMZ themes/plugins are stored in the repo itself.
-DOTFILES_DIR="${${(%):-%x}:A:h:h}"
-export ZSH_CUSTOM="$DOTFILES_DIR/zsh/custom"
+export ZSH_CUSTOM="$ZSH/custom"
 
 # Keep the dump per zsh version: /bin/zsh and Homebrew zsh differ, and a .zwc
 # compiled by one is rejected by the other ("wrong version" on startup).
@@ -37,11 +29,53 @@ mkdir -p "${ZSH_COMPDUMP:h}"
 
 ZSH_THEME="agnoster"
 DEFAULT_USER="$USER"
-plugins=(git brew macos extract sudo colored-man-pages z)
+plugins=(
+  git
+  brew
+  macos
+  extract
+  sudo
+  colored-man-pages
+  z
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
 source "$ZSH/oh-my-zsh.sh"
 
-# History --------------------------------------------------------------------
-setopt hist_ignore_space hist_ignore_all_dups hist_reduce_blanks
+# Node versions --------------------------------------------------------------
+export NVM_DIR="$HOME/.nvm"
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+  source "$NVM_DIR/nvm.sh"
+  autoload -Uz add-zsh-hook
+
+  load-nvmrc() {
+    local nvmrc_path requested_version
+    nvmrc_path="$(nvm_find_nvmrc)"
+
+    if [[ -n "$nvmrc_path" ]]; then
+      requested_version="$(nvm version "$(< "$nvmrc_path")")"
+      if [[ "$requested_version" == N/A ]]; then
+        nvm install
+      elif [[ "$requested_version" != "$(nvm version)" ]]; then
+        nvm use
+      fi
+    elif [[ -n "$(PWD=$OLDPWD nvm_find_nvmrc)" ]] &&
+         [[ "$(nvm version)" != "$(nvm version default)" ]]; then
+      nvm use default
+    fi
+  }
+
+  add-zsh-hook chpwd load-nvmrc
+  load-nvmrc
+fi
+
+# Cortex maintains its own completion file.
+if [[ -s "$HOME/.zsh/completions/cortex.zsh" ]]; then
+  source "$HOME/.zsh/completions/cortex.zsh"
+fi
+
+# History options ------------------------------------------------------------
+setopt hist_ignore_space hist_ignore_all_dups hist_find_no_dups hist_reduce_blanks
 setopt inc_append_history share_history
 setopt autocd extendedglob interactive_comments no_flow_control
 
@@ -66,8 +100,17 @@ alias e='vim'
 alias v='vim'
 alias path='print -l $path'
 alias reload='exec zsh -l'
+alias hg='history | grep'
+alias dbtf='"$HOME/.local/bin/dbt"'
 
 # Functions ------------------------------------------------------------------
+unalias mfa_global 2>/dev/null
+
+mfa_global() {
+  local credential_name="${ONEPASS_AWS_CRED_NAME:-AWS (freshpaint)}"
+  bin/mfa-global.sh "$(op item get "$credential_name" --otp)" "$@"
+}
+
 unalias g 2>/dev/null
 
 g() {
