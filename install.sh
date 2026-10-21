@@ -89,4 +89,7 @@ if [[ $DRY_RUN -eq 0 ]]; then
   if [[ -d "$BACKUP_DIR" ]]; then
     echo "Previous files: $BACKUP_DIR"
   fi
+  echo
+  echo 'To load the zsh config and passion theme, open a new zsh session or run:'
+  echo '  exec zsh -l'
 fi

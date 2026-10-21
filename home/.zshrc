@@ -27,8 +27,7 @@ export ZSH_CUSTOM="$ZSH/custom"
 export ZSH_COMPDUMP="$HOME/.cache/zsh/zcompdump-${ZSH_VERSION}"
 mkdir -p "${ZSH_COMPDUMP:h}"
 
-ZSH_THEME="agnoster"
-DEFAULT_USER="$USER"
+ZSH_THEME="passion"
 plugins=(
   git
   brew

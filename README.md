@@ -17,6 +17,28 @@ and tmux-resurrect into `~/.tmux/plugins`. Homebrew dependencies go in
 `Brewfile`. Shared configuration changes go through this repo. Secrets,
 history, caches, and downloaded dependencies stay out of git.
 
+## Zsh theme
+
+The shared `.zshrc` selects Oh My Zsh's `passion` theme, with timestamps,
+the current directory, Git branch, colored chevrons, and command timings.
+It uses `gdate` from `coreutils` and `bc`, both included in `Brewfile`.
+After installing, open a new zsh session or run `exec zsh -l` to load it in
+the current terminal.
+The installer leaves running shells alone.
+
+If a fresh zsh session still shows the old prompt, run these in that session:
+
+```zsh
+print -r -- "zsh: $ZSH_VERSION" "config directory: ${ZDOTDIR:-$HOME}"
+ls -l "${ZDOTDIR:-$HOME}/.zshrc"
+print -r -- "theme: $ZSH_THEME"
+```
+
+The `.zshrc` should link to this checkout's `home/.zshrc`, and the theme should
+be `passion`. The installer links `~/.zshrc`; if `ZDOTDIR` points elsewhere,
+zsh reads its startup files from that directory instead. If the chevrons look
+wrong, select a font that supports them in the terminal's font settings.
+
 ## Computer-specific credentials
 
 Keep credentials and computer-specific authentication settings in
@@ -71,8 +93,8 @@ blockers, not for steps you can do yourself.
    ```
    Review the dry run first. Let the installer back up existing configs;
    don't delete them to make room.
-3. Finish Vim's plugin setup with `:PlugInstall --sync`. Check agnoster's
-   glyphs and install a Powerline or Nerd Font if needed. Any terminal config
+3. Finish Vim's plugin setup with `:PlugInstall --sync`. Check passion's
+   chevrons and the terminal's font and colors. Any terminal config
    changes belong in this repo too.
 4. Verify every managed config is a symlink to this checkout, check an
    interactive zsh startup and Vim plugins, and test tmux with an isolated
