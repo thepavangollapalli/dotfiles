@@ -84,6 +84,22 @@ directory changes and installs its Node version if missing.
 Tmux uses `C-a` as its prefix. Save sessions with prefix + `Ctrl-s` and restore
 them with prefix + `Ctrl-r` through tmux-resurrect.
 
+Each pane retains up to 50,000 lines of scrollback. Scroll up with the mouse
+wheel to browse that pane's history, including while a full-screen app is
+running. Click and drag to select text; releasing copies it to the macOS
+clipboard and keeps your scroll position. These gestures belong to tmux
+rather than the app inside the pane. Scroll back to the bottom or press `q`
+to return to live output.
+
+Press prefix + `/`, type a search, and press Enter to search backward through
+the pane's history. In scrollback, `?` searches backward, `/` searches forward,
+and `n` / `N` repeat the search in the same / opposite direction. Prefix + `[`
+also enters scrollback using the keyboard; Space begins a selection and `y`
+or Enter copies it and returns to live output. History is held in memory for
+the pane's lifetime, so closed panes and server restarts lose it.
+
+Reload these settings in an existing session with prefix + `r`.
+
 ## For agents: install it for me
 
 Handle setup end to end. Ask the user only for permissions or genuine
