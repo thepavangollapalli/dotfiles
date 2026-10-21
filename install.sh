@@ -43,9 +43,33 @@ clone_dependency() {
   fi
 }
 
+download_dependency() {
+  local url="$1" destination="$2" temporary_file
+  if [[ -f "$destination" ]]; then
+    return
+  fi
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "would download $url into $destination"
+  else
+    echo "downloading $url into $destination"
+    mkdir -p -- "$(dirname -- "$destination")"
+    temporary_file="$(mktemp "$destination.XXXXXX")"
+    if curl --fail --location --silent --show-error --output "$temporary_file" "$url"; then
+      mv -- "$temporary_file" "$destination"
+    else
+      rm -f -- "$temporary_file"
+      return 1
+    fi
+  fi
+}
+
 # Download dependencies to their standard locations; keep them out of git.
 OMZ_DIR="$HOME/.oh-my-zsh"
 clone_dependency https://github.com/ohmyzsh/ohmyzsh.git "$OMZ_DIR" oh-my-zsh.sh
+download_dependency \
+  https://raw.githubusercontent.com/ChesterYue/ohmyzsh-theme-passion/main/passion.zsh-theme \
+  "$OMZ_DIR/custom/themes/passion.zsh-theme"
 clone_dependency https://github.com/zsh-users/zsh-autosuggestions.git \
   "$OMZ_DIR/custom/plugins/zsh-autosuggestions" zsh-autosuggestions.plugin.zsh
 clone_dependency https://github.com/zsh-users/zsh-syntax-highlighting.git \

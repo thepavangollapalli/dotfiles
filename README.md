@@ -12,19 +12,27 @@ rerun the installer for newly added files.
 
 Configs live under `home/`, following their paths in `$HOME`. Oh My Zsh uses
 its default custom directory, `~/.oh-my-zsh/custom`. The installer downloads
-autosuggestions and syntax highlighting there, NVM into `~/.nvm`, and TPM
+the external passion theme into its `themes/` directory, autosuggestions and
+syntax highlighting into its `plugins/` directory, NVM into `~/.nvm`, and TPM
 and tmux-resurrect into `~/.tmux/plugins`. Homebrew dependencies go in
 `Brewfile`. Shared configuration changes go through this repo. Secrets,
 history, caches, and downloaded dependencies stay out of git.
 
 ## Zsh theme
 
-The shared `.zshrc` selects Oh My Zsh's `passion` theme, with timestamps,
+The shared `.zshrc` selects the external
+[`passion` theme](https://github.com/ChesterYue/ohmyzsh-theme-passion), with timestamps,
 the current directory, Git branch, colored chevrons, and command timings.
 It uses `gdate` from `coreutils` and `bc`, both included in `Brewfile`.
 After installing, open a new zsh session or run `exec zsh -l` to load it in
 the current terminal.
 The installer leaves running shells alone.
+
+Passion is not bundled with Oh My Zsh. The installer downloads its theme file
+to `~/.oh-my-zsh/custom/themes/passion.zsh-theme` and skips it when already
+present. If startup prints `[oh-my-zsh] theme 'passion' not found`, rerun
+`./install.sh` before opening a new shell. The theme stays out of git along
+with the other downloaded dependencies.
 
 If a fresh zsh session still shows the old prompt, run these in that session:
 
