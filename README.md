@@ -90,8 +90,10 @@ Codex receive wheel events for their own scrolling. To browse tmux history
 while an app is running, press prefix + `[` first; the wheel then scrolls
 tmux history. Scroll back to the bottom or press `q` to return to the app.
 
-Click and drag to select text through tmux; releasing copies it to the macOS
-clipboard and keeps your scroll position. Press `q` to return to live output.
+Mouse-aware apps also receive clicks and drags for their own text selection.
+At the shell, or after entering tmux history with prefix + `[`, click and drag
+to select text through tmux; releasing copies it to the macOS clipboard and
+keeps your scroll position. Press `q` to return to live output.
 
 Press prefix + `/`, type a search, and press Enter to search backward through
 the pane's history. In scrollback, `?` searches backward, `/` searches forward,

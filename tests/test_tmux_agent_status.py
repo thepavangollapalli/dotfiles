@@ -5,9 +5,11 @@ import os
 from pathlib import Path
 import pty
 import select
+import shlex
 import shutil
 import struct
 import subprocess
+import sys
 import tempfile
 import termios
 import time
@@ -116,6 +118,66 @@ class AgentStatusTests(unittest.TestCase):
         self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'waiting')
         self.tmux('select-pane', '-t', waiting)
         self.assertEqual(self.tmux('display-message', '-p', '-t', self.pane, '#{@agent_state}').strip(), '')
+
+    def test_mouse_input_reaches_app_unless_copy_mode_is_explicitly_opened(self):
+        directory = Path(self.temporary.name)
+        received = directory / 'input'
+        application = directory / 'mouse_app.py'
+        application.write_text('''import os, sys, tty
+tty.setraw(sys.stdin.fileno())
+os.write(1, b"history line\\r\\n" * 100)
+os.write(1, b"\\x1b[?1002h\\x1b[?1006h")
+with open(sys.argv[1], "wb", buffering=0) as received:
+    while True:
+        received.write(os.read(0, 4096))
+''')
+        self.tmux('respawn-pane', '-k', '-t', self.pane,
+                  shlex.join([sys.executable, str(application), str(received)]))
+
+        def pane_format(value):
+            return self.tmux('display-message', '-p', '-t', self.pane, value).strip()
+
+        def wait_for(predicate):
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline:
+                if predicate():
+                    return
+                time.sleep(0.02)
+            self.fail('Timed out waiting for mouse input or pane state')
+
+        master, slave = pty.openpty()
+        fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, 100, 0, 0))
+        client = subprocess.Popen(['tmux', '-S', self.socket, 'attach-session', '-t', 'test'],
+                                  stdin=slave, stdout=slave, stderr=slave, env=self.environment)
+        os.close(slave)
+        try:
+            wait_for(lambda: pane_format('#{mouse_any_flag}') == '1' and received.exists())
+            # Real terminal events exercise dispatch, including drag start/end.
+            events = [b'\x1b[<64;10;5M', b'\x1b[<65;10;5M', b'\x1b[<0;3;5M',
+                      b'\x1b[<32;15;5M', b'\x1b[<0;15;5m', b'hello']
+            for event in events:
+                os.write(master, event)
+                wait_for(lambda: event in received.read_bytes())
+                self.assertEqual(pane_format('#{pane_in_mode}'), '0')
+
+            # Explicit tmux history retains priority until the user leaves it.
+            os.write(master, b'\x01[')
+            wait_for(lambda: pane_format('#{pane_in_mode}') == '1')
+            os.write(master, b'\x1b[<64;10;5M')
+            wait_for(lambda: int(pane_format('#{scroll_position}')) > 0)
+            self.tmux('send-keys', '-X', '-t', self.pane, 'cancel')
+
+            # Once the app exits, ordinary shell-style selection still works.
+            self.tmux('respawn-pane', '-k', '-t', self.pane, 'sleep 120')
+            wait_for(lambda: pane_format('#{mouse_any_flag}') == '0')
+            os.write(master, b'\x1b[<0;3;5M\x1b[<32;15;5M')
+            wait_for(lambda: pane_format('#{selection_present}') == '1')
+            self.assertEqual(pane_format('#{pane_in_mode}'), '1')
+            os.write(master, b'\x1b[<0;15;5m')
+        finally:
+            client.terminate()
+            client.wait(timeout=5)
+            os.close(master)
 
 
 if __name__ == '__main__':
