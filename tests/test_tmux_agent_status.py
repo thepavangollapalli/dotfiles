@@ -16,7 +16,7 @@ import termios
 import time
 import unittest
 
-DONE_CHIP = '#[bg=#3e4452]'
+DONE_CHIP = '#[bg=#3a5232]'
 REQUEST_CHIP = '#[bg=#e5c07b]'
 SPINNER_FRAMES = '⣾⣽⣻⢿⡿⣟⣯⣷'
 
@@ -90,7 +90,7 @@ class AgentStatusTests(unittest.TestCase):
         self.assertIn('#[bg=#c678dd]', self.label())
         target = self.tmux('new-window', '-d', '-P', '-F', '#{window_id}', '-n', 'other work', 'sleep 120').strip()
         other = self.tmux('display-message', '-p', '-t', target, '#{E:window-status-format}')
-        self.assertIn('#[fg=#98c379]other work', other)
+        self.assertIn('#[fg=#98c379] other work', other)
 
     def test_window_accents_stay_distinct_from_notice_amber(self):
         for index in range(2, 7):
@@ -116,18 +116,30 @@ class AgentStatusTests(unittest.TestCase):
             return captured.decode(errors='replace')
 
         def glyph_colors(glyphs, text):
-            return set(re.findall(r'\x1b\[38;2;([0-9;]+)m[%s]' % glyphs, text))
+            return set(re.findall(r'\x1b\[38;2;([0-9;]+)m(?:\x1b\[1m)?[%s]' % glyphs, text))
+
+        def plain(text):
+            return re.sub(r'\x1b\[[0-9;]*m', '', text)
 
         try:
-            # A background spinner takes its window's green accent. A request pulses,
-            # and a finished turn holds one still check.
-            other = self.tmux('new-window', '-d', '-P', '-F', '#{pane_id}', 'sleep 120').strip()
+            # A background spinner keeps its window's green accent, and a white band
+            # moves across its window name. A request pulses, and a finished turn
+            # holds one still check.
+            other = self.tmux('new-window', '-d', '-P', '-F', '#{pane_id}', '-n', 'other work', 'sleep 120').strip()
             self.tmux('set-option', '-p', '-t', other, '@agent_state', 'running')
-            self.assertIn('152;195;121', glyph_colors(SPINNER_FRAMES, read_terminal()))
+            text = read_terminal()
+            self.assertEqual(glyph_colors(SPINNER_FRAMES, text) - {'33;37;43'}, {'152;195;121'})
+            shimmer = set(re.findall(r'\x1b\[38;2;255;255;255m(?:\x1b\[1m)?(.)', text))
+            self.assertGreaterEqual(len(shimmer & set('other work')), 3)
+            # tmux writes an empty regex group as its digit. Tildes only pad the regex.
+            self.assertFalse(shimmer & set('0123456789'), shimmer)
+            self.assertNotIn('~', plain(text))
+            self.assertIn('other work', plain(text))
             self.tmux('set-option', '-p', '-t', other, '@agent_state', 'done')
             text = read_terminal()
-            self.assertIn('\x1b[38;2;152;195;121m\x1b[1m✓', text)
+            self.assertIn('\x1b[38;2;195;232;141m\x1b[1m✓', text)
             self.assertNotIn('●', text)
+            self.assertIn('\x1b[38;2;234;245;223m other work ', text)
             self.tmux('set-option', '-p', '-t', other, '@agent_state', 'needs_input')
             self.assertGreaterEqual(len(glyph_colors('●', read_terminal())), 2)
             # Click the selected status label, then the pane itself.
@@ -135,7 +147,7 @@ class AgentStatusTests(unittest.TestCase):
                 self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'running')
                 text = read_terminal()
                 self.assertGreaterEqual(len(set(SPINNER_FRAMES) & set(text)), 2, text)
-                self.assertIn('window naming', self.label())
+                self.assertIn('window naming', plain(text))
                 self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'done')
                 self.assertIn(DONE_CHIP, self.label())
                 os.write(master, f'\x1b[<0;{column};{row}M\x1b[<0;{column};{row}m'.encode())
