@@ -84,12 +84,14 @@ directory changes and installs its Node version if missing.
 Tmux uses `C-a` as its prefix. Save sessions with prefix + `Ctrl-s` and restore
 them with prefix + `Ctrl-r` through tmux-resurrect.
 
-Each pane retains up to 50,000 lines of scrollback. Scroll up with the mouse
-wheel to browse that pane's history, including while a full-screen app is
-running. Click and drag to select text; releasing copies it to the macOS
-clipboard and keeps your scroll position. These gestures belong to tmux
-rather than the app inside the pane. Scroll back to the bottom or press `q`
-to return to live output.
+Each pane retains up to 50,000 lines of scrollback. At the shell, scroll up
+with the mouse wheel to browse that pane's history. Mouse-aware apps such as
+Codex receive wheel events for their own scrolling. To browse tmux history
+while an app is running, press prefix + `[` first; the wheel then scrolls
+tmux history. Scroll back to the bottom or press `q` to return to the app.
+
+Click and drag to select text through tmux; releasing copies it to the macOS
+clipboard and keeps your scroll position. Press `q` to return to live output.
 
 Press prefix + `/`, type a search, and press Enter to search backward through
 the pane's history. In scrollback, `?` searches backward, `/` searches forward,
