@@ -16,7 +16,7 @@ import termios
 import time
 import unittest
 
-DONE_CHIP = '#[bg=#3d3627]'
+DONE_CHIP = '#[bg=#3e4452]'
 REQUEST_CHIP = '#[bg=#e5c07b]'
 SPINNER_FRAMES = '⣾⣽⣻⢿⡿⣟⣯⣷'
 
@@ -119,12 +119,15 @@ class AgentStatusTests(unittest.TestCase):
             return set(re.findall(r'\x1b\[38;2;([0-9;]+)m[%s]' % glyphs, text))
 
         try:
-            # A background spinner takes its window's green accent. Both notices pulse.
+            # A background spinner takes its window's green accent. A request pulses,
+            # and a finished turn holds one still check.
             other = self.tmux('new-window', '-d', '-P', '-F', '#{pane_id}', 'sleep 120').strip()
             self.tmux('set-option', '-p', '-t', other, '@agent_state', 'running')
             self.assertIn('152;195;121', glyph_colors(SPINNER_FRAMES, read_terminal()))
             self.tmux('set-option', '-p', '-t', other, '@agent_state', 'done')
-            self.assertGreaterEqual(len(glyph_colors('●', read_terminal())), 2)
+            text = read_terminal()
+            self.assertIn('\x1b[38;2;152;195;121m\x1b[1m✓', text)
+            self.assertNotIn('●', text)
             self.tmux('set-option', '-p', '-t', other, '@agent_state', 'needs_input')
             self.assertGreaterEqual(len(glyph_colors('●', read_terminal())), 2)
             # Click the selected status label, then the pane itself.
