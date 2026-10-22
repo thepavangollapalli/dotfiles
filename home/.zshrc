@@ -46,6 +46,15 @@ if [[ -f "$HOME/.agentfiles/generated/tmux.zsh" ]]; then
   source "$HOME/.agentfiles/generated/tmux.zsh"
 fi
 
+# Clear stale harness state when a CLI exits or crashes back to the prompt.
+dotfiles_clear_agent_status() {
+  if [[ -n "$TMUX" && -n "$TMUX_PANE" ]] && (( $+commands[tmux] )); then
+    command tmux set-option -pu -t "$TMUX_PANE" @agent_state 2>/dev/null
+  fi
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd dotfiles_clear_agent_status
+
 # Node versions --------------------------------------------------------------
 export NVM_DIR="$HOME/.nvm"
 if [[ -s "$NVM_DIR/nvm.sh" ]]; then

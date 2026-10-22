@@ -102,6 +102,26 @@ the pane's lifetime, so closed panes and server restarts lose it.
 
 Reload these settings in an existing session with prefix + `r`.
 
+## Agent window status
+
+With agentfiles installed, tmux shows a rotating spinner beside a window's topic
+while Claude Code, Codex, or Cursor works. When a turn finishes or an agent asks
+for input, the label turns amber and gains `ℹ`. Selecting the window or returning
+terminal focus dismisses that notice. Sending another prompt restores
+the working indicator. Windows without an agent keep their normal styling.
+
+State belongs to each pane: any waiting agent makes the window amber, while any
+running agent keeps its spinner moving. Moving or closing a pane carries or
+removes its state. Returning to a Zsh prompt clears stale state after a CLI exits.
+The spinner uses tmux 3.8's native animation format, with no background poller.
+
+Dotfiles owns the status formatting and shell cleanup; agentfiles owns the
+harness lifecycle hooks. After updating agentfiles, reinstall its generated
+configuration and restart harnesses. Review new Codex hooks through `/hooks`.
+Cursor's completion hook marks completed turns; it has no dedicated hook for
+mid-turn approval prompts. To check the display on an isolated tmux server, run
+`python3 -B -m unittest discover -s tests -p 'test_tmux_agent_status.py'`.
+
 ## For agents: install it for me
 
 Handle setup end to end. Ask the user only for permissions or genuine
