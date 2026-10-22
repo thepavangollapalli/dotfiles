@@ -41,6 +41,11 @@ plugins=(
 )
 source "$ZSH/oh-my-zsh.sh"
 
+# Agentfiles supplies harness integration when installed.
+if [[ -f "$HOME/.agentfiles/generated/tmux.zsh" ]]; then
+  source "$HOME/.agentfiles/generated/tmux.zsh"
+fi
+
 # Node versions --------------------------------------------------------------
 export NVM_DIR="$HOME/.nvm"
 if [[ -s "$NVM_DIR/nvm.sh" ]]; then
