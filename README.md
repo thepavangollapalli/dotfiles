@@ -117,9 +117,10 @@ amber, so both notices stay distinct. Sending another prompt restores the workin
 indicator. Windows without an agent keep their normal styling.
 
 State belongs to each pane. In a window with split panes, a request outranks a
-finished turn, and any running agent keeps its spinner moving. Moving or closing a pane carries or
-removes its state. Returning to a Zsh prompt clears stale state after a CLI exits.
-The spinner uses tmux 3.8's native animation format, with no background poller.
+finished turn, and any running agent keeps its spinner moving. Moving or closing
+a pane carries or removes its state. Returning to a Zsh prompt clears stale state
+after a CLI exits. The spinner uses tmux 3.8's native animation format, with no
+background poller.
 
 Dotfiles owns the status formatting and shell cleanup; agentfiles owns the
 harness lifecycle hooks. After updating agentfiles, reinstall its generated

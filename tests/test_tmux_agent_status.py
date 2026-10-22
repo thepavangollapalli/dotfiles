@@ -119,7 +119,7 @@ class AgentStatusTests(unittest.TestCase):
             return set(re.findall(r'\x1b\[38;2;([0-9;]+)m[%s]' % glyphs, text))
 
         try:
-            # A background spinner takes its window's green accent; both notices pulse.
+            # A background spinner takes its window's green accent. Both notices pulse.
             other = self.tmux('new-window', '-d', '-P', '-F', '#{pane_id}', 'sleep 120').strip()
             self.tmux('set-option', '-p', '-t', other, '@agent_state', 'running')
             self.assertIn('152;195;121', glyph_colors(SPINNER_FRAMES, read_terminal()))
@@ -127,15 +127,14 @@ class AgentStatusTests(unittest.TestCase):
             self.assertGreaterEqual(len(glyph_colors('●', read_terminal())), 2)
             self.tmux('set-option', '-p', '-t', other, '@agent_state', 'needs_input')
             self.assertGreaterEqual(len(glyph_colors('●', read_terminal())), 2)
-            for turn in range(2):
+            # Click the selected status label, then the pane itself.
+            for column, row in ((8, 24), (1, 1)):
                 self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'running')
                 text = read_terminal()
                 self.assertGreaterEqual(len(set(SPINNER_FRAMES) & set(text)), 2, text)
                 self.assertIn('window naming', self.label())
                 self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'done')
                 self.assertIn(DONE_CHIP, self.label())
-                # Click the already selected status label, then the pane itself.
-                column, row = (8, 24) if turn == 0 else (1, 1)
                 os.write(master, f'\x1b[<0;{column};{row}M\x1b[<0;{column};{row}m'.encode())
                 deadline = time.monotonic() + 2
                 while DONE_CHIP in self.label() and time.monotonic() < deadline:
