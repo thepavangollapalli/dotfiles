@@ -4,6 +4,7 @@ import fcntl
 import os
 from pathlib import Path
 import pty
+import re
 import select
 import shlex
 import shutil
@@ -14,6 +15,9 @@ import tempfile
 import termios
 import time
 import unittest
+
+WAITING_CHIP = '#[bg=#3d3627]'
+SPINNER_FRAMES = '⣾⣽⣻⢿⡿⣟⣯⣷'
 
 
 @unittest.skipUnless(shutil.which('tmux'), 'tmux is required')
@@ -45,57 +49,82 @@ class AgentStatusTests(unittest.TestCase):
         return self.tmux('display-message', '-p', '#{E:window-status-current-format}')
 
     def test_waiting_color_and_return_to_normal_preserve_topic(self):
-        self.assertIn('1:window naming', self.label())
-        self.assertNotIn('colour214', self.label())
+        self.assertIn('window naming', self.label())
+        self.assertNotIn(WAITING_CHIP, self.label())
         self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'waiting')
-        self.assertIn('#[fg=colour214]', self.label())
-        self.assertIn('ℹ 1:window naming', self.label())
+        self.assertIn(WAITING_CHIP, self.label())
+        self.assertIn('window naming', self.label())
         self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'running')
-        self.assertNotIn('colour214', self.label())
-        self.assertIn('#[fg=colour81]', self.label())
+        self.assertNotIn(WAITING_CHIP, self.label())
         self.tmux('set-option', '-pu', '-t', self.pane, '@agent_state')
-        self.assertNotIn('colour81', self.label())
+        self.assertNotIn(WAITING_CHIP, self.label())
         self.assertEqual(self.tmux('display-message', '-p', '#W').strip(), 'window naming')
 
     def test_waiting_sibling_is_visible_and_state_moves_with_its_pane(self):
         sibling = self.tmux('split-window', '-d', '-P', '-F', '#{pane_id}', 'sleep 120').strip()
         self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'running')
         self.tmux('set-option', '-p', '-t', sibling, '@agent_state', 'waiting')
-        self.assertIn('colour214', self.label())
+        self.assertIn(WAITING_CHIP, self.label())
         target = self.tmux('new-window', '-d', '-P', '-F', '#{window_id}', '-n', 'other work', 'sleep 120').strip()
         self.tmux('join-pane', '-d', '-s', sibling, '-t', target)
-        self.assertNotIn('colour214', self.label())
+        self.assertNotIn(WAITING_CHIP, self.label())
         other = self.tmux('display-message', '-p', '-t', target, '#{E:window-status-format}')
-        self.assertIn('colour214', other)
+        self.assertIn(WAITING_CHIP, other)
         self.assertIn('other work', other)
 
-    def test_running_indicator_animates_in_an_attached_status_bar(self):
+    def test_windows_take_accents_from_their_index(self):
+        self.assertIn('#[bg=#c678dd]', self.label())
+        target = self.tmux('new-window', '-d', '-P', '-F', '#{window_id}', '-n', 'other work', 'sleep 120').strip()
+        other = self.tmux('display-message', '-p', '-t', target, '#{E:window-status-format}')
+        self.assertIn('#[fg=#98c379]other work', other)
+
+    def test_window_accents_stay_distinct_from_waiting_amber(self):
+        for index in range(2, 7):
+            self.tmux('new-window', '-d', '-t', f':{index}', 'sleep 120')
+            label = self.tmux('display-message', '-p', '-t', f':{index}', '#{E:window-status-format}')
+            # Waiting amber, its dim index color, and One Dark orange all read as one hue.
+            self.assertNotRegex(label, '#e5c07b|#d19a66|#b8975a')
+
+    def test_agent_indicators_animate_in_an_attached_status_bar(self):
         self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'running')
         master, slave = pty.openpty()
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, 140, 0, 0))
         client = subprocess.Popen(['tmux', '-S', self.socket, 'attach-session', '-t', 'test'],
                                   stdin=slave, stdout=slave, stderr=slave, env=self.environment)
         os.close(slave)
+
+        def read_terminal():
+            captured = b''
+            deadline = time.monotonic() + 2.5
+            while time.monotonic() < deadline:
+                if select.select([master], [], [], 0.2)[0]:
+                    captured += os.read(master, 65536)
+            return captured.decode(errors='replace')
+
+        def glyph_colors(glyphs, text):
+            return set(re.findall(r'\x1b\[38;2;([0-9;]+)m[%s]' % glyphs, text))
+
         try:
+            # A background spinner takes its window's green accent; waiting pulses.
+            other = self.tmux('new-window', '-d', '-P', '-F', '#{pane_id}', 'sleep 120').strip()
+            self.tmux('set-option', '-p', '-t', other, '@agent_state', 'running')
+            self.assertIn('152;195;121', glyph_colors(SPINNER_FRAMES, read_terminal()))
+            self.tmux('set-option', '-p', '-t', other, '@agent_state', 'waiting')
+            self.assertGreaterEqual(len(glyph_colors('●', read_terminal())), 2)
             for turn in range(2):
                 self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'running')
-                captured = b''
-                deadline = time.monotonic() + 2
-                while time.monotonic() < deadline:
-                    if select.select([master], [], [], 0.2)[0]:
-                        captured += os.read(master, 65536)
-                frames = set('⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏') & set(captured.decode(errors='replace'))
-                self.assertGreaterEqual(len(frames), 2, captured.decode(errors='replace'))
+                text = read_terminal()
+                self.assertGreaterEqual(len(set(SPINNER_FRAMES) & set(text)), 2, text)
                 self.assertIn('window naming', self.label())
                 self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'waiting')
-                self.assertIn('ℹ', self.label())
+                self.assertIn(WAITING_CHIP, self.label())
                 # Click the already selected status label, then the pane itself.
                 column, row = (8, 24) if turn == 0 else (1, 1)
                 os.write(master, f'\x1b[<0;{column};{row}M\x1b[<0;{column};{row}m'.encode())
                 deadline = time.monotonic() + 2
-                while 'ℹ' in self.label() and time.monotonic() < deadline:
+                while WAITING_CHIP in self.label() and time.monotonic() < deadline:
                     time.sleep(0.05)
-                self.assertNotIn('ℹ', self.label())
+                self.assertNotIn(WAITING_CHIP, self.label())
         finally:
             client.terminate()
             client.wait(timeout=5)
@@ -113,7 +142,7 @@ class AgentStatusTests(unittest.TestCase):
         self.assertEqual(self.tmux('display-message', '-p', '-t', waiting, '#{@agent_state}').strip(), '')
         self.assertEqual(self.tmux('display-message', '-p', '-t', self.pane, '#{@agent_state}').strip(), 'running')
         self.assertEqual(self.tmux('display-message', '-p', '-t', other, '#{@agent_state}').strip(), 'waiting')
-        self.assertNotIn('colour214', self.label())
+        self.assertNotIn(WAITING_CHIP, self.label())
         # Switching panes also acknowledges a later notice in the same window.
         self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'waiting')
         self.tmux('select-pane', '-t', waiting)

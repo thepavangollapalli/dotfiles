@@ -106,11 +106,13 @@ Reload these settings in an existing session with prefix + `r`.
 
 ## Agent window status
 
-With agentfiles installed, tmux shows a rotating spinner beside a window's topic
-while Claude Code, Codex, or Cursor works. When a turn finishes or an agent asks
-for input, the label turns amber and gains `ℹ`. Selecting the window or returning
-terminal focus dismisses that notice. Sending another prompt restores
-the working indicator. Windows without an agent keep their normal styling.
+Each window keeps a color from its index, and the current window fills with that
+color. With agentfiles installed, tmux shows a spinner in the window's color
+beside its topic while Claude Code, Codex, or Cursor works. When a turn finishes
+or an agent asks for input, the label becomes an amber chip with a slowly
+pulsing `●` dot. No window color is amber, so that notice stays distinct.
+Selecting the window or returning terminal focus dismisses that notice. Sending
+another prompt restores the working indicator. Windows without an agent keep their normal styling.
 
 State belongs to each pane: any waiting agent makes the window amber, while any
 running agent keeps its spinner moving. Moving or closing a pane carries or
