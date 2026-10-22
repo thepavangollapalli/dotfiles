@@ -108,14 +108,16 @@ Reload these settings in an existing session with prefix + `r`.
 
 Each window keeps a color from its index, and the current window fills with that
 color. With agentfiles installed, tmux shows a spinner in the window's color
-beside its topic while Claude Code, Codex, or Cursor works. When a turn finishes
-or an agent asks for input, the label becomes an amber chip with a slowly
-pulsing `●` dot. No window color is amber, so that notice stays distinct.
-Selecting the window or returning terminal focus dismisses that notice. Sending
-another prompt restores the working indicator. Windows without an agent keep their normal styling.
+beside its topic while Claude Code, Codex, or Cursor works. When an agent needs
+permission or an answer, the label becomes a filled amber chip with a pulsing
+dark `●` dot. That notice stays until the agent continues. When a turn finishes,
+the label becomes a dim amber chip with a slowly pulsing amber `●` dot. Selecting
+the window or returning terminal focus dismisses that notice. No window color is
+amber, so both notices stay distinct. Sending another prompt restores the working
+indicator. Windows without an agent keep their normal styling.
 
-State belongs to each pane: any waiting agent makes the window amber, while any
-running agent keeps its spinner moving. Moving or closing a pane carries or
+State belongs to each pane. In a window with split panes, a request outranks a
+finished turn, and any running agent keeps its spinner moving. Moving or closing a pane carries or
 removes its state. Returning to a Zsh prompt clears stale state after a CLI exits.
 The spinner uses tmux 3.8's native animation format, with no background poller.
 
