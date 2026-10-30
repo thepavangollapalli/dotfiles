@@ -9,6 +9,10 @@ fi
 
 export BUN_INSTALL="$HOME/.bun"
 typeset -U path
+# macOS login shells can reorder PATH even when HOMEBREW_PREFIX is inherited.
+if [[ -n ${HOMEBREW_PREFIX:-} ]]; then
+  path=("$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin" $path)
+fi
 path=("$HOME/.local/bin" "$BUN_INSTALL/bin" "$HOME/.opencode/bin" $path "$HOME/.docker/bin")
 if [[ -n ${HOMEBREW_PREFIX:-} ]]; then
   path=("$HOMEBREW_PREFIX/opt/postgresql@18/bin" "$HOMEBREW_PREFIX/opt/ruby/bin" $path)
