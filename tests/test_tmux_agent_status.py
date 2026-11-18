@@ -73,7 +73,7 @@ class AgentStatusTests(unittest.TestCase):
         self.assertIn(DONE_CHIP, other)
         self.assertIn('other work', other)
 
-    def test_request_outranks_done_and_survives_viewing(self):
+    def test_request_outranks_done_and_viewing_clears_both(self):
         sibling = self.tmux('split-window', '-d', '-P', '-F', '#{pane_id}', 'sleep 120').strip()
         self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'done')
         self.tmux('set-option', '-p', '-t', sibling, '@agent_state', 'needs_input')
@@ -81,10 +81,28 @@ class AgentStatusTests(unittest.TestCase):
         self.assertNotIn(DONE_CHIP, self.label())
         self.tmux('select-pane', '-t', sibling)
         self.assertEqual(self.tmux('display-message', '-p', '-t', self.pane, '#{@agent_state}').strip(), '')
-        self.assertEqual(self.tmux('display-message', '-p', '-t', sibling, '#{@agent_state}').strip(), 'needs_input')
-        self.assertIn(REQUEST_CHIP, self.label())
-        self.tmux('set-option', '-p', '-t', sibling, '@agent_state', 'running')
+        self.assertEqual(self.tmux('display-message', '-p', '-t', sibling, '#{@agent_state}').strip(), '')
         self.assertNotIn(REQUEST_CHIP, self.label())
+
+    def test_background_work_keeps_the_spinner_after_a_notice_is_cleared(self):
+        self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'done')
+        self.tmux('set-option', '-p', '-t', self.pane, '@agent_background', '1')
+        self.assertEqual(self.tmux('display-message', '-p', '-t', self.pane, '#{E:@agent_running}').strip(), '1')
+        self.assertNotIn(DONE_CHIP, self.label())
+        sibling = self.tmux('split-window', '-d', '-P', '-F', '#{pane_id}', 'sleep 120').strip()
+        self.tmux('select-pane', '-t', sibling)
+        self.assertEqual(self.tmux('display-message', '-p', '-t', self.pane, '#{@agent_state}').strip(), '')
+        self.assertEqual(self.tmux('display-message', '-p', '-t', self.pane, '#{E:@agent_shimmering}').strip(), '1')
+        self.tmux('set-option', '-pu', '-t', self.pane, '@agent_background')
+        self.assertEqual(self.tmux('display-message', '-p', '-t', self.pane, '#{E:@agent_running}').strip(), '0')
+
+    def test_background_tasks_hold_back_done_until_cleared(self):
+        self.tmux('set-option', '-p', '-t', self.pane, '@agent_state', 'done')
+        self.tmux('set-option', '-p', '-t', self.pane, '@agent_tasks', '1')
+        self.assertEqual(self.tmux('display-message', '-p', '-t', self.pane, '#{E:@agent_running}').strip(), '1')
+        self.assertNotIn(DONE_CHIP, self.label())
+        self.tmux('set-option', '-pu', '-t', self.pane, '@agent_tasks')
+        self.assertIn(DONE_CHIP, self.label())
 
     def test_windows_take_accents_from_their_index(self):
         self.assertIn('#[bg=#c678dd]', self.label())

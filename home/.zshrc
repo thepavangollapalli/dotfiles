@@ -49,7 +49,7 @@ fi
 # Clear stale harness state when a CLI exits or crashes back to the prompt.
 dotfiles_clear_agent_status() {
   if [[ -n "$TMUX" && -n "$TMUX_PANE" ]] && (( $+commands[tmux] )); then
-    command tmux set-option -pu -t "$TMUX_PANE" @agent_state 2>/dev/null
+    command tmux set-option -pu -t "$TMUX_PANE" @agent_state \; set-option -pu -t "$TMUX_PANE" @agent_background \; set-option -pu -t "$TMUX_PANE" @agent_tasks 2>/dev/null
   fi
 }
 autoload -Uz add-zsh-hook
