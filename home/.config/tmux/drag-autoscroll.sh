@@ -1,6 +1,7 @@
 #!/bin/sh
 # Keep scrolling a tmux copy-mode pane while a mouse drag holds the selection
-# cursor on its top or bottom row. tmux scrolls there only when the mouse moves.
+# cursor within two rows of its top or bottom edge, where the mouse can reach.
+# tmux itself scrolls there only when the mouse moves.
 pane="$1"
 [ -n "$pane" ] || exit 1
 
@@ -15,9 +16,9 @@ while :; do
     '#{?@drag_scrolling,1,0} #{pane_in_mode} #{copy_cursor_y} #{pane_height}')" || exit 0
   set -- $state
   [ "$1" = 1 ] && [ "$2" = 1 ] && [ -n "$3" ] || exit 0
-  if [ "$3" -le 0 ]; then
+  if [ "$3" -le 1 ]; then
     tmux send-keys -X -N 2 -t "$pane" cursor-up
-  elif [ "$3" -ge $(($4 - 1)) ]; then
+  elif [ "$3" -ge $(($4 - 2)) ]; then
     tmux send-keys -X -N 2 -t "$pane" cursor-down
   fi
   sleep 0.03
